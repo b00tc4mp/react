@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script src="https://unpkg.com/@babel/standalone/babel.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "react": "https://esm.sh/react?dev",
+                "react-dom/client": "https://esm.sh/react-dom/client?dev"
+            }
+        }
+    </script>
+
+    <script type="text/babel" data-type="module">
+        import React, { StrictMode, useState, useRef, useEffect, useMemo } from 'react'
+
+        import { createRoot } from 'react-dom/client'
+
+        function DragMe({ children }) {
+            const ref = useRef()
+
+            useEffect(() => {
+                const { current: container } = ref
+                container.state = {}
+
+                container.onmousedown = handleMouseDown
+                container.onmouseup = handleMouseUp
+                container.onmousemove = handleMouseMove
+            }, [])
+
+            const handleMouseDown = event => {
+                const { current: container } = ref
+                const { state } = container
+
+                if (!state.dragging) {
+                    state.dragging = true
+
+                    const { clientX: px, clientY: py } = event
+
+                    state.pix = px
+                    state.piy = py
+
+                    const { x, y, width, height } = container.getBoundingClientRect()
+
+                    state.cix = x
+                    state.ciy = y
+                }
+            }
+
+            const handleMouseUp = () => {
+                const { current: container } = ref
+                const { state } = container
+
+                if (state.dragging) {
+                    state.dragging = false
+                }
+            }
+
+            const handleMouseMove = event => {
+                const { current: container } = ref
+                const { state } = container
+
+                if (state.dragging) {
+                    const { clientX: px, clientY: py } = event
+                    const { cix, ciy, pix, piy } = state
+                    const { current: container } = ref
+                    const { x, y, width, height } = container.getBoundingClientRect()
+
+                    const tx = cix + px - pix
+                    const ty = ciy + py - piy
+
+                    container.style.left = `${tx}px`
+                    container.style.top = `${ty}px`
+                }
+            }
+
+            return <div ref={ref} style={{ position: 'absolute', cursor: 'pointer' }}>{children}</div>
+        }
+
+        function withDrag(component) {
+            return <DragMe>{component}</DragMe>
+        }
+
+        function App() {
+            return <>
+                <DragMe><h1>Pryvit, Mir!</h1></DragMe>
+                {withDrag(<h1>Hello, World!</h1>)}
+                {withDrag(<h1>Ciao, Mondo!</h1>)}
+            </>
+        }
+
+        const root = createRoot(document.getElementById('root'))
+        root.render(<StrictMode><App /></StrictMode>)
+    </script>
+</body>
+
+</html>
